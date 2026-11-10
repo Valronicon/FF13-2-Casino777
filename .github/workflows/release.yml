@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build dinput8.dll (NativeAOT, win-x86)
+        shell: pwsh
+        run: |
+          $env:PATH += ";${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          dotnet publish src/Dinput8Proxy -c Release -p:Version=$version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          $dll = 'src/Dinput8Proxy/bin/Release/net10.0/win-x86/publish/dinput8.dll'
+          $stage = 'dist/stage'
+          New-Item -ItemType Directory -Force "$stage/alba_data/prog/win/bin" | Out-Null
+          Copy-Item $dll "$stage/alba_data/prog/win/bin/dinput8.dll"
+          Copy-Item README.md "$stage/FF13Casino777-README.md"
+          Copy-Item LICENSE "$stage/FF13Casino777-LICENSE.txt"
+          $zip = "dist/FF13Casino777-$version.zip"
+          Compress-Archive -Path "$stage/*" -DestinationPath $zip
+          # Release notes: section of CHANGELOG.md for this version + checksums
+          $changelog = Get-Content CHANGELOG.md -Raw
+          $section = [regex]::Match($changelog, "(?ms)^## $([regex]::Escape($version))\s*\r?\n(.*?)(?=^## |\z)").Groups[1].Value.Trim()
+          $dllHash = (Get-FileHash $dll -Algorithm SHA256).Hash
+          $zipHash = (Get-FileHash $zip -Algorithm SHA256).Hash
+          @"
+          $section
+
+          ### Installation
+          Extract the zip into your ``FINAL FANTASY XIII-2`` game folder so that ``dinput8.dll`` ends up in
+          ``alba_data\prog\win\bin\`` next to ``ffxiii2img.exe``. See the README for details.
+
+          ### SHA256
+          | File | SHA256 |
+          |---|---|
+          | ``dinput8.dll`` | ``$dllHash`` |
+          | ``FF13Casino777-$version.zip`` | ``$zipHash`` |
+          "@ | Set-Content dist/notes.md -Encoding utf8
+          "ZIP=$zip" >> $env:GITHUB_ENV
+          "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create '${{ github.ref_name }}' $env:ZIP --title "FF13Casino777 $env:VERSION" --notes-file dist/notes.md

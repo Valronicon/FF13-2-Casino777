@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Builds a native 32-bit "dinput8.dll" (NativeAOT) that is placed next to ffxiii2img.exe.
+    Build:  dotnet publish -c Release   (requires the MSVC C++ build tools; vswhere.exe must be on PATH)
+    Output: bin\Release\net10.0\win-x86\publish\dinput8.dll
+            (bin\Release\net10.0\win-x86\dinput8.dll is an intermediate .NET assembly and will NOT work in the game)
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>dinput8</AssemblyName>
+    <RootNamespace>FF13Casino777</RootNamespace>
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Small and quiet inside a foreign process: no culture data, no background GC thread -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <!-- Patched runtime >= 10.0.14 (GHSA-p3jp-9v83-76w9); NativeAOT links the runtime statically -->
+    <RuntimeFrameworkVersion>10.0.15</RuntimeFrameworkVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <Product>FF13Casino777</Product>
+    <AssemblyTitle>FF13Casino777 - every slot machine spin in FINAL FANTASY XIII-2 lands on 777</AssemblyTitle>
+    <Description>dinput8.dll proxy for FINAL FANTASY XIII-2 (Steam) that makes every casino slot machine spin land on 777.</Description>
+    <Copyright>Copyright (c) 2026 Valronicon</Copyright>
+  </PropertyGroup>
+
+  <!-- Version as a compile-time constant (avoids pulling reflection into the native DLL) -->
+  <Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <BuildInfoFile>$(IntermediateOutputPath)BuildInfo.g.cs</BuildInfoFile>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(BuildInfoFile)" Overwrite="true" WriteOnlyWhenDifferent="true"
+                      Lines="namespace FF13Casino777%3B internal static class BuildInfo { public const string Version = &quot;$(Version)&quot;%3B }" />
+    <ItemGroup>
+      <Compile Include="$(BuildInfoFile)" />
+      <FileWrites Include="$(BuildInfoFile)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
