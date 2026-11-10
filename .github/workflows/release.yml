@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:   # manual run: build and package only, no release
 
 permissions:
   contents: write
@@ -11,24 +12,30 @@ jobs:
   release:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
+
+      - name: Determine version
+        shell: pwsh
+        run: |
+          if ('${{ github.ref_type }}' -eq 'tag') { $version = '${{ github.ref_name }}'.TrimStart('v') }
+          else { $version = ([xml](Get-Content src/Dinput8Proxy/Dinput8Proxy.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1; $version += '-dev' }
+          "VERSION=$version" >> $env:GITHUB_ENV
 
       - name: Build dinput8.dll (NativeAOT, win-x86)
         shell: pwsh
         run: |
           $env:PATH += ";${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer"
-          $version = '${{ github.ref_name }}'.TrimStart('v')
-          dotnet publish src/Dinput8Proxy -c Release -p:Version=$version
+          dotnet publish src/Dinput8Proxy -c Release -p:Version=$env:VERSION
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Package
         shell: pwsh
         run: |
-          $version = '${{ github.ref_name }}'.TrimStart('v')
+          $version = $env:VERSION
           $dll = 'src/Dinput8Proxy/bin/Release/net10.0/win-x86/publish/dinput8.dll'
           $stage = 'dist/stage'
           New-Item -ItemType Directory -Force "$stage/alba_data/prog/win/bin" | Out-Null
@@ -56,9 +63,15 @@ jobs:
           | ``FF13Casino777-$version.zip`` | ``$zipHash`` |
           "@ | Set-Content dist/notes.md -Encoding utf8
           "ZIP=$zip" >> $env:GITHUB_ENV
-          "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: FF13Casino777-${{ env.VERSION }}
+          path: ${{ env.ZIP }}
 
       - name: Create GitHub release
+        if: github.ref_type == 'tag'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}

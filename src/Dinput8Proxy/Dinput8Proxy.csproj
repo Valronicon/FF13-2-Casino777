@@ -28,6 +28,7 @@
 
   <PropertyGroup>
     <Version>1.0.0</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Product>FF13Casino777</Product>
     <AssemblyTitle>FF13Casino777 - every slot machine spin in FINAL FANTASY XIII-2 lands on 777</AssemblyTitle>
     <Description>dinput8.dll proxy for FINAL FANTASY XIII-2 (Steam) that makes every casino slot machine spin land on 777.</Description>
