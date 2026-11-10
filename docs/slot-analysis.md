@@ -2,8 +2,10 @@
 
 Technical background for the FF13Casino777 patch.
 
-Reference binary: `ffxiii2img.exe` (Steam), SHA256 `BEA6D43F8C3D4D8184077F89C6D3F6D4ED780F3B073C8F72C0257F10316196E6`,
-image base `0x00400000`, ASLR enabled (all addresses below are static VAs and must be rebased at runtime by
+Reference binary: `ffxiii2img.exe` (Steam) with 4 GB (Large Address Aware) patch, SHA256
+`BEA6D43F8C3D4D8184077F89C6D3F6D4ED780F3B073C8F72C0257F10316196E6`. The original Steam executable
+(SHA256 `575EA0325BE70108B77F84B6F6A96BB7A02AA3ABB151DEAEB324B84D6CB5AF07`) differs only in 3 header bytes
+(`IMAGE_FILE_LARGE_ADDRESS_AWARE` flag and PE checksum); code and addresses are identical. Image base `0x00400000`, ASLR enabled (all addresses below are static VAs and must be rebased at runtime by
 `module base - 0x400000`). No SteamStub, `.text` is not encrypted.
 
 ## Input path

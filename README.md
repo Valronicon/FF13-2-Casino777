@@ -75,12 +75,16 @@ Full reverse-engineering notes: [docs/slot-analysis.md](docs/slot-analysis.md).
 
 ### Supported game version
 
-| File | SHA256 |
-|---|---|
-| `ffxiii2img.exe` (Steam) | `BEA6D43F8C3D4D8184077F89C6D3F6D4ED780F3B073C8F72C0257F10316196E6` |
+The mod works with the Steam executable **with or without the 4 GB (Large Address Aware) patch** that
+some FF XIII-2 fixes apply. The 4 GB patch only changes 3 bytes in the file header; the game code is
+identical, and the mod only checks the game code around its patch site.
 
-The executable with the 4 GB (Large Address Aware) patch applied by common FF XIII-2 fixes is supported –
-the mod only checks the code around the patch site.
+| `ffxiii2img.exe` (Steam) | SHA256 |
+|---|---|
+| original | `575EA0325BE70108B77F84B6F6A96BB7A02AA3ABB151DEAEB324B84D6CB5AF07` |
+| with 4 GB patch | `BEA6D43F8C3D4D8184077F89C6D3F6D4ED780F3B073C8F72C0257F10316196E6` |
+
+Other executables (e.g. a future game update) are detected and left untouched.
 
 ## Building from source
 
